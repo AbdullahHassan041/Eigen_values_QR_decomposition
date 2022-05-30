@@ -6,6 +6,7 @@
 
 using namespace hls;
 static matrix_t A_cal[matrix_size][matrix_size]={0};
+static matrix_t dummy_return[Inp_matrix] = {0};
 static int count =0;
 matrix_t h[8]={0};
 matrix_t * eigen_calculations(matrix_t *inp_a)
@@ -22,8 +23,8 @@ matrix_t * eigen_calculations(matrix_t *inp_a)
 	{
 		 c = 1;
 	}
-	sin_theta=c * (*(inp_a+2)) / sqrt((pow(*(inp_a+0),2)+pow(*(inp_a+2),2)));
-	cos_theta=    *(inp_a+0)   / sqrt((pow(*(inp_a+0),2)+pow(*(inp_a+2),2)));
+	sin_theta=c * (*(inp_a+2)) / x_sqrt((pow(*(inp_a+0),2)+pow(*(inp_a+2),2)));
+	cos_theta=    *(inp_a+0)   / x_sqrt((pow(*(inp_a+0),2)+pow(*(inp_a+2),2)));
 	h[0] =cos_theta;
 	h[1] =sin_theta;
 	h[2] =-1 * (sin_theta);
@@ -34,8 +35,7 @@ matrix_t * eigen_calculations(matrix_t *inp_a)
 	h[7] =( *(inp_a+1)) * sin_theta + ( *(inp_a+3)) * cos_theta;
 	return h;
 }
-
-void decomposition(matrix_t *A)
+float * dummy_function(matrix_t *A)
 {
 	matrix_t A_cal_temp[matrix_size][matrix_size]={0};
 	matrix_t A_cal_temp2[Inp_matrix]={0};
@@ -74,7 +74,9 @@ void decomposition(matrix_t *A)
 	A_cal_temp2[3]= A_cal_temp[1][1];
 	if((diff1 > 0.05) || (diff2 > 0.05) )
 	{
-		decomposition(A_cal_temp2);
+		//decomposition(A_cal_temp2,dummy);
+
+		dummy_function(A_cal_temp2);
 	}
 	else
 	{
@@ -107,11 +109,30 @@ void decomposition(matrix_t *A)
 			}
 			printf("\n");
 		}
+		dummy_return[0]=A_cal_temp[0][0];
+		dummy_return[1]=A_cal_temp[0][1];
+		dummy_return[2]=A_cal_temp[1][0];
+		dummy_return[3]=A_cal_temp[1][1];
+
+		printf("\n");
+
 		printf("\nNow difference between first diagonal element is: %1.3f\n",diff1);
 		printf("Now difference between second diagonal element is: %1.3f\n",diff2);
 		printf("First  Eigen value(Lamda_1)  is: %1.3f\n",A_cal_temp[0][0]);
 		printf("second Eigen value(Lamda_2)  is: %1.3f\n",A_cal_temp[1][1]);
 		printf("We got our desired Eigen values(Lamda) After %d iterations",count);
     }
+	return dummy_return;
+}
+void decomposition(matrix_t *A,matrix_t *A_recon)
+{
+#pragma HLS INTERFACE m_axi bundle=Master_bus port=A_recon offset=slave
+#pragma HLS INTERFACE m_axi bundle=Master_bus port=A offset=slave
+	A_recon = dummy_function(A);
+	printf("\nMAIN \n");
+	for(int j=0;j<4;j++)
+	{
+		printf("%1.4f \n",A_recon[j]);
+	}
 
 }
